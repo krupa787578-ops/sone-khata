@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#211B17">
+<title>सोने खाते</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="application-name" content="सोने खाते">
+<meta name="apple-mobile-web-app-title" content="सोने खाते">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --ink:#211B17; --gold:#B8862F; --gold-soft:#E9D9B0;
+    --paper:#F1EFEA; --card:#FFFFFF;
+    --credit:#2E6B52; --debit:#8C2F32;
+    --muted:#8A8178; --line:#E4E0D8;
+    --shadow:0 2px 10px rgba(33,27,23,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,"Segoe UI","Noto Sans Devanagari",sans-serif;
+    background:var(--paper); color:var(--ink);
+    padding-bottom:76px; line-height:1.4;
+    -webkit-user-select:none; user-select:none;
+  }
+  .num{font-variant-numeric:tabular-nums}
+  input,select,textarea,button{font-family:inherit;font-size:16px}
+
+  header{
+    background:var(--ink); color:#fff;
+    padding:calc(14px + env(safe-area-inset-top)) 16px 14px;
+    position:sticky; top:0; z-index:20;
+  }
+  header .shop{font-size:13px;color:var(--gold-soft);letter-spacing:.3px}
+  header .title{font-size:19px;font-weight:600;margin-top:1px}
+
+  .screen{display:none;padding:14px 14px 8px}
+  .screen.active{display:block}
+
+  .summary{
+    background:var(--card);border-radius:16px;box-shadow:var(--shadow);
+    padding:16px;margin-bottom:14px;border:1px solid var(--line);
+  }
+  .summary .lead{font-size:13px;color:var(--muted)}
+  .bal-row{display:flex;gap:10px;margin-top:8px}
+  .bal{flex:1;background:var(--paper);border-radius:12px;padding:12px}
+  .bal .k{font-size:12px;color:var(--muted)}
+  .bal .v{font-size:20px;font-weight:700;margin-top:2px}
+  .bal.get .v{color:var(--credit)}
+  .bal.give .v{color:var(--debit)}
+  .metal-row{display:flex;gap:10px;margin-top:10px}
+  .metal{flex:1;text-align:center;background:var(--paper);border-radius:12px;padding:10px}
+  .metal .k{font-size:12px;color:var(--muted)}
+  .metal .v{font-size:16px;font-weight:600;margin-top:2px}
+  .mini{font-size:12px;color:var(--muted);margin-top:12px;text-align:center}
+
+  .sec-title{font-size:15px;font-weight:600;margin:4px 2px 10px}
+
+  .row{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px;margin-bottom:9px;display:flex;align-items:center;gap:12px;
+    box-shadow:var(--shadow);
+  }
+  .row:active{transform:scale(.99)}
+  .avatar{
+    width:42px;height:42px;border-radius:11px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:17px;background:var(--gold-soft);color:var(--ink);
+  }
+  .avatar.bill{background:var(--ink);color:var(--gold-soft);font-size:13px}
+  .row .main{flex:1;min-width:0}
+  .row .name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .row .amt{text-align:right;flex:none}
+  .row .amt .v{font-weight:700;font-size:15px}
+  .row .amt .t{font-size:11px;color:var(--muted)}
+  .get{color:var(--credit)} .give{color:var(--debit)}
+
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+  .badge.jama{background:#E5F0EA;color:var(--credit)}
+  .badge.nave{background:#F3E5E5;color:var(--debit)}
+  .badge.buy{background:#F3E5E5;color:var(--debit)}
+  .badge.sell{background:#E5F0EA;color:var(--credit)}
+
+  .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px}
+  .empty .big{font-size:15px;color:var(--ink);font-weight:600;margin-bottom:4px}
+
+  .fab{
+    position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));
+    background:var(--gold);color:#fff;border:none;border-radius:16px;
+    padding:14px 18px;font-size:15px;font-weight:700;z-index:30;
+    box-shadow:0 6px 18px rgba(184,134,47,.4);display:flex;align-items:center;gap:8px;
+  }
+  .fab:active{transform:scale(.97)}
+
+  nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:25;
+    background:var(--card);border-top:1px solid var(--line);
+    display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav button{
+    flex:1;background:none;border:none;color:var(--muted);
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 1px;font-size:10px;font-weight:600;
+  }
+  nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  nav button.active{color:var(--gold)}
+
+  .sheet-bg{
+    position:fixed;inset:0;background:rgba(20,15,12,.5);z-index:40;
+    display:none;align-items:flex-end;
+  }
+  .sheet-bg.open{display:flex}
+  .sheet{
+    background:var(--paper);width:100%;max-height:94vh;overflow-y:auto;
+    border-radius:20px 20px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom));
+    animation:up .22s ease;
+  }
+  @keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+  .grab{width:40px;height:4px;background:var(--line);border-radius:4px;margin:8px auto 6px}
+  .sheet h3{margin:6px 2px 14px;font-size:18px}
+
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 2px 5px;font-weight:600}
+  input,select,textarea{
+    width:100%;padding:13px 12px;border:1px solid var(--line);border-radius:11px;
+    background:var(--card);color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
+  textarea{resize:none}
+  input[readonly]{background:var(--paper);color:var(--muted);font-weight:600}
+
+  .seg{display:flex;gap:8px}
+  .seg button{
+    flex:1;padding:12px 6px;border:1px solid var(--line);border-radius:11px;
+    background:var(--card);color:var(--muted);font-weight:600;
+  }
+  .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .seg.kind button.on[data-v="जमा"],.seg.kind button.on[data-v="विक्री"]{background:var(--credit);border-color:var(--credit)}
+  .seg.kind button.on[data-v="नावे"],.seg.kind button.on[data-v="खरेदी"]{background:var(--debit);border-color:var(--debit)}
+
+  .two{display:flex;gap:10px}
+  .two>div{flex:1}
+  .three{display:flex;gap:8px}
+  .three>div{flex:1}
+
+  .save{
+    width:100%;margin-top:20px;background:var(--gold);color:#fff;border:none;
+    padding:15px;border-radius:13px;font-size:16px;font-weight:700;
+  }
+  .save:active{transform:scale(.99)}
+  .ghost{
+    width:100%;margin-top:10px;background:none;border:1px solid var(--line);
+    color:var(--muted);padding:12px;border-radius:12px;font-weight:600;
+  }
+
+  /* bill items */
+  .bitem{background:var(--card);border:1px solid var(--line);border-radius:13px;
+    padding:11px;margin-bottom:10px;position:relative}
+  .bitem .itop{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .bitem .itop input{flex:1}
+  .bitem .rm{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:var(--paper);color:var(--debit);font-size:18px;padding:0}
+  .bitem label{margin:6px 2px 4px;font-size:12px}
+  .bitem input{padding:10px}
+  .fine-line{background:var(--gold-soft);border-radius:9px;padding:8px 10px;margin-top:8px;
+    font-size:13px;font-weight:600;color:var(--ink);display:flex;justify-content:space-between}
+  .add-item{width:100%;padding:12px;border:1px dashed var(--gold);border-radius:12px;
+    background:none;color:var(--gold);font-weight:700;margin-bottom:14px}
+
+  .total-box{background:var(--ink);color:#fff;border-radius:14px;padding:14px;margin:6px 0}
+  .total-box .tl{display:flex;justify-content:space-between;font-size:14px;margin:3px 0}
+  .total-box .tl .lbl{color:var(--gold-soft)}
+  .total-box .big{font-size:20px;font-weight:700}
+
+  .settle-quick{display:flex;gap:8px;margin-top:8px}
+  .settle-quick button{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;
+    background:var(--card);font-size:12.5px;font-weight:600;color:var(--ink)}
+
+  .result{background:var(--card);border:1px solid var(--line);border-radius:13px;
+    padding:12px;margin-top:14px}
+  .result .rl{display:flex;justify-content:space-between;padding:5px 0;font-size:14px}
+  .result .rl b{font-weight:700}
+
+  .stmt-head{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+  .stmt-head .nm{font-size:17px;font-weight:700}
+  .stmt-head .ph{font-size:13px;color:var(--muted);margin-top:2px}
+  .stmt-bal{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .stmt-bal .bal{min-width:44%}
+  .actions{display:flex;gap:10px;margin-top:12px}
+  .actions a,.actions button{
+    flex:1;text-align:center;text-decoration:none;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);padding:11px;border-radius:11px;
+    font-size:13.5px;font-weight:600;
+  }
+
+  .detail-items{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:8px}
+  .detail-items .dh,.detail-items .dr{display:grid;grid-template-columns:1.4fr 1fr .7fr .7fr 1fr;gap:4px;padding:9px 10px;font-size:12.5px}
+  .detail-items .dh{background:var(--paper);color:var(--muted);font-weight:600}
+  .detail-items .dr{border-top:1px solid var(--line)}
+  .detail-items .dr .r{text-align:right}
+
+  .acc{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+  .acc-head{padding:14px;font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+  .acc-head .chev{color:var(--muted);transition:transform .2s;font-size:13px}
+  .acc.open .acc-head .chev{transform:rotate(180deg)}
+  .acc-body{display:none;padding:2px 12px 12px}
+  .acc.open .acc-body{display:block}
+  .day-head{font-size:12px;color:var(--muted);font-weight:700;margin:14px 2px 8px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+  .pfilter{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+  .pfilter button{flex:none;padding:8px 14px;border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--muted);font-size:13px;font-weight:600}
+  .pfilter button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .hidden{display:none}
+  /* detail ledger statement table */
+  .sttwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--card);margin-top:8px}
+  table.sttbl{border-collapse:collapse;font-size:11px;min-width:640px;width:100%}
+  table.sttbl th,table.sttbl td{padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.sttbl thead th{background:var(--paper);color:var(--muted);font-weight:700;position:sticky;top:0}
+  table.sttbl .grp{text-align:center;border-left:2px solid var(--ink)}
+  table.sttbl td.r,table.sttbl th.r{text-align:right}
+  table.sttbl td.side{border-left:2px solid var(--line)}
+  table.sttbl .part{white-space:normal;min-width:130px}
+  table.sttbl .vno{font-weight:700}
+  table.sttbl .note{color:var(--muted);font-style:italic}
+  table.sttbl tr.tot td{font-weight:700;background:var(--paper);border-top:2px solid var(--ink)}
+  .stmt-close{margin-top:10px;background:var(--gold-soft);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600}
+  .printonly{display:none}
+  @media print{
+    @page{size:landscape;margin:9mm}
+    body{padding:0;background:#fff}
+    body>*{display:none!important}
+    #printArea{display:block!important}
+    #printArea table{border-collapse:collapse;width:100%;font-size:11px}
+    #printArea th,#printArea td{border:1px solid #999;padding:4px 6px}
+    #printArea .r{text-align:right}
+    #printArea h2{margin:0 0 2px} #printArea .sub{color:#444;margin-bottom:10px;font-size:12px}
+    #printArea .grp{text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shop">सूर्यवंशी अलंकार केंद्र</div>
+  <div class="title" id="hTitle">आजचा हिशोब</div>
+</header>
+
+<!-- होम -->
+<section class="screen active" id="s-home">
+  <div class="two" style="margin-bottom:12px">
+    <div><button class="ghost" id="qaBill" style="margin:0;border-color:var(--gold);color:var(--gold);font-weight:700">＋ नवीन बिल</button></div>
+    <div><button class="ghost" id="qaTxn" style="margin:0;border-color:var(--gold);color:var(--gold);font-weight:700">पावती / पेमेंट</button></div>
+  </div>
+  <div id="dashCards"></div>
+  <div class="sec-title">अलीकडचे व्यवहार</div>
+  <div id="recentList"></div>
+</section>
+
+<!-- व्यवहार -->
+<section class="screen" id="s-txn">
+  <div class="sec-title">सर्व व्यवहार व बिलं</div>
+  <div id="txnList"></div>
+</section>
+
+<!-- पार्ट्या -->
+<section class="screen" id="s-party">
+  <div class="pfilter" id="pFilter">
+    <button data-f="सर्व" class="on">सर्व</button>
+    <button data-f="ग्राहक">ग्राहक</button>
+    <button data-f="व्यापारी">व्यापारी</button>
+    <button data-f="कारागीर">कारागीर</button>
+    <button data-f="इतर">इतर</button>
+  </div>
+  <div id="partyList"></div>
+</section>
+
+<!-- अहवाल -->
+<section class="screen" id="s-report">
+  <div class="acc open">
+    <div class="acc-head">येणे-देणे सारांश (Outstanding) <span class="chev">▲</span></div>
+    <div class="acc-body"><div id="rptOutstanding"></div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">खाती (Ledgers) <span class="chev">▲</span></div>
+    <div class="acc-body">
+      <button class="ghost" id="btnNewLedger" style="border-color:var(--gold);color:var(--gold)">＋ नवीन खाते जोडा</button>
+      <div id="ledgerList" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">खातेवही (Ledger Statement) <span class="chev">▲</span></div>
+    <div class="acc-body">
+      <label>पार्टी / खाते निवडा</label>
+      <select id="rptParty"><option value="">— निवडा —</option></select>
+      <div id="stmt"></div>
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">रोजकीर्द (Day Book) <span class="chev">▲</span></div>
+    <div class="acc-body"><div id="rptDaybook"></div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">रोखवही (Cash Book) <span class="chev">▲</span></div>
+    <div class="acc-body"><div id="rptCashbook"></div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">बँकवही (Bank Book) <span class="chev">▲</span></div>
+    <div class="acc-body"><div id="rptBankbook"></div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">रेटकट बुक (Rate-Cut Book) <span class="chev">▲</span></div>
+    <div class="acc-body"><div id="rptRatecut"></div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head">डेटा बॅकअप <span class="chev">▲</span></div>
+    <div class="acc-body">
+      <button class="ghost" id="btnExport">बॅकअप फाइल घ्या (.json)</button>
+      <button class="ghost" id="btnImport">बॅकअप रिस्टोर करा</button>
+      <input type="file" id="fileImport" accept=".json" class="hidden">
+    </div>
+  </div>
+</section>
+
+<!-- स्टॉक -->
+<section class="screen" id="s-stock">
+  <div class="pfilter" id="sFilter">
+    <button data-f="सर्व" class="on">सर्व</button>
+    <button data-f="सोने">सोने</button>
+    <button data-f="चांदी">चांदी</button>
+  </div>
+  <div class="summary" id="stockSummary" style="margin-bottom:12px"></div>
+  <div class="two" style="margin-bottom:12px">
+    <div><button class="ghost" id="btnNewItem" style="margin:0;border-color:var(--gold);color:var(--gold)">＋ नवीन आयटम</button></div>
+    <div><button class="ghost" id="btnNewMove" style="margin:0">↑↓ आवक / जावक</button></div>
+  </div>
+  <div class="sec-title">आयटम स्टॉक</div>
+  <div id="itemList"></div>
+</section>
+
+<button class="fab" id="fab">＋ नवीन</button>
+
+<nav>
+  <button data-tab="home" class="active">
+    <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>होम</button>
+  <button data-tab="txn">
+    <svg viewBox="0 0 24 24"><path d="M8 6h11"/><path d="M8 12h11"/><path d="M8 18h11"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>व्यवहार</button>
+  <button data-tab="stock">
+    <svg viewBox="0 0 24 24"><path d="M12 3 3 7.5v9L12 21l9-4.5v-9L12 3z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>स्टॉक</button>
+  <button data-tab="party">
+    <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M17 9.5a2.6 2.6 0 1 0 0-.01"/><path d="M16 20a4.5 4.5 0 0 1 5-4"/></svg>पार्ट्या</button>
+  <button data-tab="report">
+    <svg viewBox="0 0 24 24"><path d="M5 21V8m7 13V3m7 18v-9"/></svg>अहवाल</button>
+</nav>
+
+<!-- chooser -->
+<div class="sheet-bg" id="chooser">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>नवीन नोंद</h3>
+    <button class="save" id="chBill" style="margin-top:6px">खरेदी – विक्री बिल</button>
+    <button class="ghost" id="chTxn" style="border-color:var(--gold);color:var(--gold)">पावती / पेमेंट (रोख·बँक·सोने·रेटकट)</button>
+    <button class="ghost" id="chParty">नवीन पार्टी जोडा</button>
+    <button class="ghost" id="chLedger">नवीन खाते (Ledger) जोडा</button>
+    <button class="ghost" id="chClose">रद्द करा</button>
+  </div>
+</div>
+
+<!-- साधा व्यवहार sheet -->
+<div class="sheet-bg" id="txnSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="txnSheetTitle">पावती / पेमेंट</h3>
+    <label>पार्टी / खाते</label>
+    <select id="fParty"></select>
+
+    <div id="kindWrap">
+      <label>प्रकार</label>
+      <div class="seg kind" id="fKind">
+        <button data-v="जमा">जमा — पावती (आले)</button>
+        <button data-v="नावे" class="on">नावे — पेमेंट (दिले)</button>
+      </div>
+    </div>
+
+    <label>माध्यम</label>
+    <div class="seg" id="fMode" style="flex-wrap:wrap">
+      <button data-v="रोख" class="on">रोख</button>
+      <button data-v="बँक">बँक</button>
+      <button data-v="सोने">सोने</button>
+      <button data-v="चांदी">चांदी</button>
+      <button data-v="रेटकट">रेटकट</button>
+    </div>
+
+    <div id="cashFields">
+      <label>रक्कम (₹)</label>
+      <input type="number" id="fAmount" inputmode="decimal" placeholder="0">
+    </div>
+
+    <div id="bankField" class="hidden">
+      <label>बँक / खाते (ऐच्छिक)</label>
+      <input type="text" id="fBank" placeholder="उदा. SBI चालू खाते">
+    </div>
+
+    <div id="metalFields" class="hidden">
+      <div class="two">
+        <div><label>वजन (ग्रॅम)</label><input type="number" id="fWeight" inputmode="decimal" placeholder="0.000"></div>
+        <div><label>टच %</label><input type="number" id="fTouch" inputmode="decimal" placeholder="91.6"></div>
+      </div>
+      <div class="fine-line"><span>शुद्ध</span><span id="fineHint" class="num">0 ग्रॅ</span></div>
+    </div>
+
+    <div id="rcFields" class="hidden">
+      <label>बाजू</label>
+      <div class="seg kind" id="fSide">
+        <button data-v="येणे" class="on">मला येणे (पार्टीचं मेटल)</button>
+        <button data-v="देणे">मला देणे (माझं मेटल)</button>
+      </div>
+      <div class="two" style="margin-top:8px">
+        <div><label>धातू</label>
+          <div class="seg" id="fRcMetal"><button data-v="सोने" class="on">सोने</button><button data-v="चांदी">चांदी</button></div>
+        </div>
+        <div><label>शुद्ध (ग्रॅम)</label><input type="number" id="fRcFine" inputmode="decimal" placeholder="0.000"></div>
+      </div>
+      <label>दर (₹/ग्रॅम)</label>
+      <input type="number" id="fRcRate" inputmode="decimal" placeholder="₹ प्रति ग्रॅम">
+      <div class="fine-line"><span>रोख रक्कम</span><span id="rcHint" class="num">₹0</span></div>
+    </div>
+
+    <label>तारीख</label>
+    <input type="date" id="fDate">
+    <label>टीप (ऐच्छिक)</label>
+    <textarea id="fNote" rows="2" placeholder="तपशील..."></textarea>
+    <button class="save" id="btnSaveTxn">साठवा</button>
+    <button class="ghost" id="btnDelTxn" style="display:none;color:var(--debit);border-color:#e7c7c7">ही नोंद हटवा</button>
+    <button class="ghost" id="btnCloseTxn">रद्द करा</button>
+  </div>
+</div>
+
+<!-- बिल sheet -->
+<div class="sheet-bg" id="billSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="billTitle">नवीन बिल</h3>
+
+    <div class="seg kind" id="bType">
+      <button data-v="खरेदी" class="on">खरेदी</button>
+      <button data-v="विक्री">विक्री</button>
+    </div>
+
+    <label>पार्टी (व्यापारी / कारागीर)</label>
+    <select id="bParty"></select>
+
+    <div class="two" style="margin-top:4px">
+      <div>
+        <label>धातू</label>
+        <div class="seg" id="bMetal">
+          <button data-v="सोने" class="on">सोने</button>
+          <button data-v="चांदी">चांदी</button>
+        </div>
+      </div>
+      <div>
+        <label>तारीख</label>
+        <input type="date" id="bDate">
+      </div>
+    </div>
+
+    <label style="margin-top:16px">माल (आयटम)</label>
+    <div id="billItems"></div>
+    <button class="add-item" id="btnAddItem">＋ आणखी आयटम</button>
+
+    <div class="total-box">
+      <div class="tl"><span class="lbl">एकूण शुद्ध</span><span class="big num" id="billTotFine">0 ग्रॅ</span></div>
+    </div>
+
+    <label style="margin-top:16px">रेटकट (शुद्ध → रोख)</label>
+    <div class="two">
+      <div><input type="number" id="bRcFine" inputmode="decimal" placeholder="शुद्ध ग्रॅम"></div>
+      <div><input type="number" id="bRcRate" inputmode="decimal" placeholder="दर ₹/ग्रॅम"></div>
+    </div>
+    <div class="settle-quick">
+      <button id="rcAll">सर्व रेटकट</button>
+      <button id="rcNone">रेटकट नाही (उधार)</button>
+    </div>
+
+    <label>मजुरी / घडणावळ (₹) — ऐच्छिक</label>
+    <input type="number" id="bMaking" inputmode="decimal" placeholder="0">
+
+    <label id="bPaidLbl">नगदी दिले (₹)</label>
+    <input type="number" id="bPaid" inputmode="decimal" placeholder="0">
+
+    <label>टीप (ऐच्छिक)</label>
+    <textarea id="bNote" rows="2" placeholder="बिल नंबर, तपशील..."></textarea>
+
+    <div class="result" id="billResult"></div>
+
+    <button class="save" id="btnSaveBill">बिल साठवा</button>
+    <button class="ghost" id="btnCloseBill">रद्द करा</button>
+  </div>
+</div>
+
+<!-- बिल detail -->
+<div class="sheet-bg" id="detailSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div id="detailBody"></div>
+    <button class="ghost" id="btnDelBill" style="color:var(--debit);border-color:#e7c7c7">हे बिल हटवा</button>
+    <button class="ghost" id="btnCloseDetail">बंद करा</button>
+  </div>
+</div>
+
+<!-- आयटम sheet -->
+<div class="sheet-bg" id="itemSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3 id="itemTitle">नवीन आयटम</h3>
+    <label>नाव</label>
+    <input type="text" id="iName" placeholder="उदा. सोन्याची अंगठी">
+    <label>प्रकार / कॅटेगरी</label>
+    <input type="text" id="iCat" list="catList" placeholder="अंगठी, चेन, हार...">
+    <datalist id="catList">
+      <option value="अंगठी"></option><option value="चेन"></option><option value="हार"></option>
+      <option value="मंगळसूत्र"></option><option value="बांगडी"></option><option value="कानातले"></option>
+      <option value="पैंजण"></option><option value="ब्रेसलेट"></option><option value="बिस्किट / नाणे"></option>
+      <option value="सुटं सोनं"></option><option value="चांदी वस्तू"></option><option value="इतर"></option>
+    </datalist>
+    <div class="two">
+      <div><label>धातू</label>
+        <div class="seg" id="iMetal"><button data-v="सोने" class="on">सोने</button><button data-v="चांदी">चांदी</button></div>
+      </div>
+      <div><label>टच / कॅरेट</label><input type="text" id="iPurity" placeholder="22K / 91.6"></div>
+    </div>
+    <label>मोजणी</label>
+    <div class="seg" id="iType"><button data-v="नग" class="on">नग-वार (piece)</button><button data-v="सुटा">सुटा (फक्त वजन)</button></div>
+    <div class="two" style="margin-top:8px">
+      <div><label>सुरुवातीचे नग</label><input type="number" id="iOpenQty" inputmode="numeric" placeholder="0"></div>
+      <div><label>सुरुवातीचे वजन (ग्रॅ)</label><input type="number" id="iOpenWt" inputmode="decimal" placeholder="0.000"></div>
+    </div>
+    <button class="save" id="btnSaveItem">आयटम साठवा</button>
+    <button class="ghost" id="btnCloseItem">रद्द करा</button>
+  </div>
+</div>
+
+<!-- आवक/जावक sheet -->
+<div class="sheet-bg" id="moveSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>स्टॉक आवक / जावक</h3>
+    <label>आयटम</label>
+    <select id="mItem"></select>
+    <label>प्रकार</label>
+    <div class="seg kind" id="mDir"><button data-v="आवक" class="on">आवक (जमा +)</button><button data-v="जावक">जावक (कमी −)</button></div>
+    <div class="two">
+      <div><label>नग</label><input type="number" id="mQty" inputmode="numeric" placeholder="0"></div>
+      <div><label>वजन (ग्रॅ)</label><input type="number" id="mWt" inputmode="decimal" placeholder="0.000"></div>
+    </div>
+    <label>कारण</label>
+    <select id="mReason"><option>खरेदी</option><option>विक्री</option><option>घडणावळ</option><option>मोडणी</option><option>ओपनिंग</option><option>इतर</option></select>
+    <label>तारीख</label>
+    <input type="date" id="mDate">
+    <label>टीप (ऐच्छिक)</label>
+    <textarea id="mNote" rows="2"></textarea>
+    <button class="save" id="btnSaveMove">नोंद साठवा</button>
+    <button class="ghost" id="btnCloseMove">रद्द करा</button>
+  </div>
+</div>
+
+<!-- आयटम detail -->
+<div class="sheet-bg" id="itemDetail">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div id="itemDetailBody"></div>
+    <button class="ghost" id="btnDelItem" style="color:var(--debit);border-color:#e7c7c7">हा आयटम हटवा</button>
+    <button class="ghost" id="btnCloseItemDetail">बंद करा</button>
+  </div>
+</div>
+
+<!-- खाते (Ledger) sheet -->
+<div class="sheet-bg" id="ledgerSheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>नवीन खाते (Ledger)</h3>
+    <label>खात्याचे नाव</label>
+    <input type="text" id="lName" placeholder="उदा. लाईट बिल, भाडं, पगार, SBI बँक">
+    <label>गट (Ledger Group)</label>
+    <select id="lGroup">
+      <option>खर्च</option><option>उत्पन्न</option><option>बँक</option>
+      <option>रोख</option><option>भांडवल</option><option>कर्ज</option><option>इतर</option>
+    </select>
+    <button class="save" id="btnSaveLedger">खाते साठवा</button>
+    <button class="ghost" id="btnCloseLedger">रद्द करा</button>
+  </div>
+</div>
+
+<!-- पार्टी sheet -->
+<div class="sheet-bg" id="partySheet">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>नवीन पार्टी</h3>
+    <label>नाव</label>
+    <input type="text" id="pName" placeholder="पार्टीचे नाव">
+    <label>मोबाईल नंबर (ऐच्छिक)</label>
+    <input type="tel" id="pPhone" inputmode="numeric" placeholder="10 अंकी">
+    <label>प्रकार</label>
+    <select id="pType">
+      <option>ग्राहक</option><option>व्यापारी</option><option>कारागीर</option><option>इतर</option>
+    </select>
+    <button class="save" id="btnSaveParty">पार्टी साठवा</button>
+    <button class="ghost" id="btnCloseParty">रद्द करा</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- Storage ---------- */
+const DB = (() => {
+  let mem = { parties:[], txns:[], bills:[], items:[], stockMoves:[], ledgers:[] };
+  let mode = "mem", idb = null;
+  function lsGet(){ try{ return JSON.parse(localStorage.getItem("goldkhata")||"")||mem; }catch(e){ return mem; } }
+  function lsSet(d){ try{ localStorage.setItem("goldkhata", JSON.stringify(d)); }catch(e){} }
+  async function init(){
+    try{
+      idb = await new Promise((res,rej)=>{
+        const r = indexedDB.open("goldkhata",1);
+        r.onupgradeneeded = e => e.target.result.createObjectStore("kv");
+        r.onsuccess = e => res(e.target.result);
+        r.onerror = () => rej(); setTimeout(rej,1500);
+      });
+      const d = await idbGet(); if(d) mem = d; mode="idb";
+    }catch(e){
+      idb=null;
+      try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); mem=lsGet(); mode="ls"; }
+      catch(e2){ mode="mem"; }
+    }
+    if(!mem.parties) mem.parties=[]; if(!mem.txns) mem.txns=[]; if(!mem.bills) mem.bills=[];
+    if(!mem.items) mem.items=[]; if(!mem.stockMoves) mem.stockMoves=[]; if(!mem.ledgers) mem.ledgers=[];
+  }
+  function idbGet(){ return new Promise(res=>{ const t=idb.transaction("kv","readonly").objectStore("kv").get("data"); t.onsuccess=()=>res(t.result); t.onerror=()=>res(null); }); }
+  function idbSet(d){ return new Promise(res=>{ const t=idb.transaction("kv","readwrite").objectStore("kv").put(d,"data"); t.onsuccess=()=>res(); t.onerror=()=>res(); }); }
+  async function persist(){ if(mode==="idb") await idbSet(mem); else if(mode==="ls") lsSet(mem); }
+  return { init, persist,
+    get data(){return mem;}, set data(d){mem=d;},
+    get parties(){return mem.parties;}, get txns(){return mem.txns;}, get bills(){return mem.bills;},
+    get items(){return mem.items;}, get stockMoves(){return mem.stockMoves;}, get ledgers(){return mem.ledgers;} };
+})();
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const todayISO = () => new Date().toLocaleDateString("en-CA");
+const rupee = n => "₹" + Math.round(Math.abs(n)).toLocaleString("en-IN");
+const rupeeS = n => (n<0?"−₹":"₹") + Math.round(Math.abs(n)).toLocaleString("en-IN");
+const gram = n => (Math.round(Math.abs(n)*1000)/1000).toLocaleString("en-IN") + " ग्रॅ";
+const fmtDate = iso => { const p=(iso||"").split("-"); return p.length===3? p[2]+"/"+p[1]+"/"+p[0].slice(2):iso; };
+const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function fineOfTxn(t){ const w=+t.weight||0, tc=+t.touch||0; return tc>0? w*tc/100 : w; }
+function billFine(b){ return (b.items||[]).reduce((s,it)=> s+(+it.fine||0),0); }
+
+// party balance from txns + bills. +ve = party owes shop (येणे)
+function balanceOf(pid){
+  const b = {cash:0, gold:0, silver:0};
+  for(const t of DB.txns){
+    if(t.partyId!==pid) continue;
+    if(t.mode==="रेटकट"){
+      const ss = t.side==="देणे" ? -1 : 1;
+      const f = +t.fine||0, r = +t.rate||0;
+      if(t.metal==="चांदी") b.silver += -ss*f; else b.gold += -ss*f;
+      b.cash += ss*f*r;
+      continue;
+    }
+    const s = t.kind==="नावे" ? 1 : -1;
+    if(t.mode==="रोख"||t.mode==="बँक") b.cash += s*(+t.amount||0);
+    else if(t.mode==="सोने") b.gold += s*fineOfTxn(t);
+    else if(t.mode==="चांदी") b.silver += s*fineOfTxn(t);
+  }
+  for(const bl of DB.bills){
+    if(bl.partyId!==pid) continue;
+    const eff = billEffect(bl);
+    b.cash += eff.cash;
+    if(bl.metal==="सोने") b.gold += eff.metal; else b.silver += eff.metal;
+  }
+  return b;
+}
+// effect of a bill on party balance (+ve = party owes shop)
+function billEffect(bl){
+  const sign = bl.billType==="खरेदी" ? -1 : 1;   // खरेदी: shop owes party
+  const total = billFine(bl);
+  const rcFine = Math.min(+bl.rcFine||0, total);
+  const remainFine = total - rcFine;
+  const cashVal = rcFine * (+bl.rcRate||0);
+  const netCash = cashVal + (+bl.making||0) - (+bl.paid||0);
+  return { metal: sign*remainFine, cash: sign*netCash, total, remainFine, cashVal, netCash };
+}
+const partyById = id => DB.parties.find(p=>p.id===id);
+const ledgerById = id => DB.ledgers.find(l=>l.id===id);
+const accountById = id => partyById(id) || ledgerById(id);
+const accountName = id => { const a=accountById(id); return a?a.name:"—"; };
+const accountMeta = id => { const p=partyById(id); if(p) return p.type+(p.phone?" · "+p.phone:""); const l=ledgerById(id); return l?l.group:""; };
+const itemById = id => DB.items.find(i=>i.id===id);
+// current stock of an item {qty, weight}
+function stockOf(iid){
+  const s={qty:0,weight:0};
+  for(const m of DB.stockMoves){ if(m.itemId!==iid) continue;
+    const sg = m.dir==="जावक" ? -1 : 1;
+    s.qty += sg*(+m.qty||0); s.weight += sg*(+m.weight||0);
+  }
+  return s;
+}
+
+/* ---------- Unified entries ---------- */
+function allEntries(pid){
+  const es = [];
+  for(const t of DB.txns) if(!pid||t.partyId===pid) es.push({type:"txn",rec:t,date:t.date,createdAt:t.createdAt});
+  for(const b of DB.bills) if(!pid||b.partyId===pid) es.push({type:"bill",rec:b,date:b.date,createdAt:b.createdAt});
+  return es;
+}
+
+/* ---------- Render ---------- */
+function renderAll(){ renderHome(); renderTxns(); renderParties(); renderReportParties();
+  renderReports(); renderStock(); }
+
+function renderHome(){
+  // party balances
+  let get=0,give=0,gold=0,silver=0;
+  for(const p of DB.parties){ const b=balanceOf(p.id);
+    if(b.cash>0) get+=b.cash; else give+=-b.cash; gold+=b.gold; silver+=b.silver; }
+  // cash-in-hand & bank (actual movements)
+  let cash=0, bank=0;
+  for(const t of DB.txns){
+    if(t.mode==="रोख") cash += (t.kind==="जमा"?1:-1)*(+t.amount||0);
+    else if(t.mode==="बँक") bank += (t.kind==="जमा"?1:-1)*(+t.amount||0);
+  }
+  for(const bl of DB.bills){ cash += (bl.billType==="विक्री"?1:-1)*(+bl.paid||0); }
+  // stock
+  let sg=0,sgn=0,ss=0,ssn=0;
+  for(const it of DB.items){ const st=stockOf(it.id);
+    if(it.metal==="सोने"){ sg+=st.weight; sgn+=st.qty; } else { ss+=st.weight; ssn+=st.qty; } }
+  // today
+  const td=todayISO();
+  let tBuy=0,tSell=0,tIn=0,tOut=0;
+  for(const bl of DB.bills){ if(bl.date!==td) continue;
+    if(bl.billType==="खरेदी") tBuy+=billFine(bl); else tSell+=billFine(bl);
+    const s=bl.billType==="विक्री"?1:-1; if(s>0) tIn+=(+bl.paid||0); else tOut+=(+bl.paid||0);
+  }
+  for(const t of DB.txns){ if(t.date!==td) continue;
+    if(t.mode==="रोख"||t.mode==="बँक"){ if(t.kind==="जमा") tIn+=(+t.amount||0); else tOut+=(+t.amount||0); } }
+  const cnt=allEntries().filter(e=>e.date===td).length;
+
+  const metalTag=v=>v>0?" येणे":v<0?" देणे":"";
+  $("#dashCards").innerHTML=`
+    <div class="summary">
+      <div class="lead">शिल्लक</div>
+      <div class="bal-row">
+        <div class="bal"><div class="k">रोख हातात</div><div class="v num ${cash<0?'give':''}">${rupeeS(cash)}</div></div>
+        <div class="bal"><div class="k">बँक</div><div class="v num ${bank<0?'give':''}">${rupeeS(bank)}</div></div>
+      </div>
+    </div>
+    <div class="summary">
+      <div class="lead">येणे-देणे बाकी</div>
+      <div class="bal-row">
+        <div class="bal get"><div class="k">एकूण येणे</div><div class="v num">${rupee(get)}</div></div>
+        <div class="bal give"><div class="k">एकूण देणे</div><div class="v num">${rupee(give)}</div></div>
+      </div>
+      <div class="metal-row">
+        <div class="metal"><div class="k">सोने बाकी</div><div class="v num ${gold>0?'get':gold<0?'give':''}">${gram(gold)}${metalTag(gold)}</div></div>
+        <div class="metal"><div class="k">चांदी बाकी</div><div class="v num ${silver>0?'get':silver<0?'give':''}">${gram(silver)}${metalTag(silver)}</div></div>
+      </div>
+    </div>
+    <div class="summary">
+      <div class="lead">स्टॉक शिल्लक</div>
+      <div class="metal-row">
+        <div class="metal"><div class="k">सोने</div><div class="v num">${gram(sg)}</div><div class="k">${sgn} नग</div></div>
+        <div class="metal"><div class="k">चांदी</div><div class="v num">${gram(ss)}</div><div class="k">${ssn} नग</div></div>
+      </div>
+    </div>
+    <div class="summary">
+      <div class="lead">आजचा व्यवहार · ${cnt} नोंदी</div>
+      <div class="metal-row">
+        <div class="metal"><div class="k">खरेदी</div><div class="v num give">${gram(tBuy)}</div></div>
+        <div class="metal"><div class="k">विक्री</div><div class="v num get">${gram(tSell)}</div></div>
+      </div>
+      <div class="mini">रोख आज — आत ${rupee(tIn)} · बाहेर ${rupee(tOut)}</div>
+    </div>`;
+
+  const recent=allEntries().sort((a,b)=>b.createdAt-a.createdAt).slice(0,8);
+  $("#recentList").innerHTML = recent.length? recent.map(entryRow).join("")
+    : emptyBox("अजून नोंद नाही","वर ‘नवीन बिल’ किंवा ‘पावती’ ने सुरुवात करा");
+  bindEntryRows("#recentList");
+}
+function renderTxns(){
+  const all=allEntries().sort((a,b)=>b.createdAt-a.createdAt);
+  $("#txnList").innerHTML= all.length? all.map(entryRow).join("")
+    : emptyBox("अजून नोंद नाही","खाली ‘नवीन’ बटणाने सुरुवात करा");
+  bindEntryRows("#txnList");
+}
+function entryRow(e){ return e.type==="txn"? txnRow(e.rec) : billRow(e.rec); }
+
+function txnRow(t){
+  const nm=accountName(t.partyId);
+  if(t.mode==="रेटकट"){
+    const f=+t.fine||0, r=+t.rate||0;
+    return `<div class="row" data-txn="${t.id}">
+      <div class="avatar bill">RC</div>
+      <div class="main"><div class="name">${esc(nm)}</div>
+      <div class="sub">रेटकट · ${t.metal} · ${fmtDate(t.date)} · ${gram(f)} × ${rupee(r)}${t.note?" · "+esc(t.note):""}</div></div>
+      <div class="amt"><div class="v num">${rupee(f*r)}</div><div class="t">${t.side}</div></div></div>`;
+  }
+  let val,unit;
+  if(t.mode==="रोख"||t.mode==="बँक"){ val=rupee(+t.amount||0); unit=t.mode==="बँक"?("बँक"+(t.bank?" · "+esc(t.bank):"")):"रोख"; }
+  else { val=gram(fineOfTxn(t)); unit=t.mode+" शुद्ध"; }
+  const cls=t.kind==="जमा"?"get":"give";
+  return `<div class="row" data-txn="${t.id}">
+    <div class="avatar">${esc(nm[0]||"?")}</div>
+    <div class="main"><div class="name">${esc(nm)}</div>
+    <div class="sub"><span class="badge ${t.kind==="जमा"?"jama":"nave"}">${t.kind}</span> · ${fmtDate(t.date)} · ${unit}${t.note?" · "+esc(t.note):""}</div></div>
+    <div class="amt"><div class="v ${cls}">${val}</div><div class="t">${t.mode==="बँक"?"बँक":unit.split(" ")[0]}</div></div></div>`;
+}
+function billRow(b){
+  const p=partyById(b.partyId), nm=p?p.name:"—";
+  const eff=billEffect(b);
+  const buy=b.billType==="खरेदी";
+  return `<div class="row" data-bill="${b.id}">
+    <div class="avatar bill">बिल</div>
+    <div class="main"><div class="name">${esc(nm)}</div>
+    <div class="sub"><span class="badge ${buy?"buy":"sell"}">${b.billType}</span> · ${b.metal} · ${fmtDate(b.date)}</div></div>
+    <div class="amt"><div class="v ${buy?"give":"get"}">${gram(eff.total)}</div><div class="t">शुद्ध</div></div></div>`;
+}
+function bindEntryRows(sel){
+  document.querySelectorAll(sel+" [data-txn]").forEach(el=>el.onclick=()=>openTxn(el.dataset.txn));
+  document.querySelectorAll(sel+" [data-bill]").forEach(el=>el.onclick=()=>openDetail(el.dataset.bill));
+}
+
+let partyFilter="सर्व";
+function renderParties(){
+  let list=[...DB.parties].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  if(partyFilter!=="सर्व") list=list.filter(p=>p.type===partyFilter);
+  $("#partyList").innerHTML= list.length? list.map(p=>{
+    const b=balanceOf(p.id), parts=[];
+    if(Math.round(Math.abs(b.cash))>0) parts.push(`<span class="${b.cash>0?'get':'give'}">${rupee(b.cash)} ${b.cash>0?'येणे':'देणे'}</span>`);
+    if(Math.abs(b.gold)>0.001) parts.push(`<span class="${b.gold>0?'get':'give'}">${gram(b.gold)} सोने</span>`);
+    if(Math.abs(b.silver)>0.001) parts.push(`<span class="${b.silver>0?'get':'give'}">${gram(b.silver)} चांदी</span>`);
+    return `<div class="row" data-party="${p.id}">
+      <div class="avatar">${esc(p.name[0]||"?")}</div>
+      <div class="main"><div class="name">${esc(p.name)}</div><div class="sub">${p.type}${p.phone?" · "+esc(p.phone):""}</div></div>
+      <div class="amt"><div class="t" style="max-width:130px">${parts.length?parts.join(" · "):"हिशोब चुकता"}</div></div></div>`;
+  }).join("") : emptyBox(partyFilter==="सर्व"?"अजून पार्टी नाही":"या प्रकारात पार्टी नाही","‘नवीन’ मधून पार्टी जोडा");
+  document.querySelectorAll("#partyList [data-party]").forEach(el=>el.onclick=()=>openLedger(el.dataset.party));
+}
+function openLedger(pid){ showTab("report"); $("#rptParty").value=pid;
+  const acc=$("#rptParty").closest(".acc"); if(acc) acc.classList.add("open"); renderStatement();
+  acc && acc.scrollIntoView({behavior:"smooth",block:"start"}); }
+
+function renderLedgers(){
+  const groups={}; 
+  for(const l of DB.ledgers){ (groups[l.group]=groups[l.group]||[]).push(l); }
+  const order=["खर्च","उत्पन्न","बँक","रोख","भांडवल","कर्ज","इतर"];
+  const keys=Object.keys(groups).sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+  if(!DB.ledgers.length){ $("#ledgerList").innerHTML=`<div class="empty">अजून खाते नाही. खर्च/बँक/भांडवल यासाठी खाते जोडा.</div>`; return; }
+  let html="";
+  for(const g of keys){
+    html+=`<div class="day-head">${g}</div>`;
+    for(const l of groups[g].sort((a,b)=>a.name.localeCompare(b.name,"mr"))){
+      const b=balanceOf(l.id);
+      const parts=[];
+      if(Math.round(Math.abs(b.cash))>0) parts.push(`<span class="${b.cash>0?'get':'give'}">${rupee(b.cash)} ${b.cash>0?'येणे':'देणे'}</span>`);
+      if(Math.abs(b.gold)>0.001) parts.push(`<span>${gram(b.gold)} सोने</span>`);
+      if(Math.abs(b.silver)>0.001) parts.push(`<span>${gram(b.silver)} चांदी</span>`);
+      html+=`<div class="row" data-ledger="${l.id}"><div class="avatar" style="background:var(--ink);color:var(--gold-soft);font-size:13px">₹</div>
+        <div class="main"><div class="name">${esc(l.name)}</div><div class="sub">${g}</div></div>
+        <div class="amt"><div class="t" style="max-width:130px">${parts.length?parts.join(" · "):"—"}</div></div></div>`;
+    }
+  }
+  $("#ledgerList").innerHTML=html;
+  document.querySelectorAll("#ledgerList [data-ledger]").forEach(el=>el.onclick=()=>openLedger(el.dataset.ledger));
+}
+function openLedgerSheet(){ $("#lName").value=""; $("#lGroup").value="खर्च"; openSheet("#ledgerSheet"); }
+$("#btnNewLedger").onclick=openLedgerSheet;
+$("#chLedger").onclick=()=>{ closeSheet("#chooser"); openLedgerSheet(); };
+$("#btnCloseLedger").onclick=()=>closeSheet("#ledgerSheet");
+$("#btnSaveLedger").onclick=async()=>{
+  const name=$("#lName").value.trim(); if(!name){alert("नाव टाका");return;}
+  DB.ledgers.push({id:uid(),createdAt:Date.now(),name,group:$("#lGroup").value});
+  await DB.persist(); closeSheet("#ledgerSheet"); renderReports(); fillAccountSelect($("#fParty"));
+};
+
+function renderReportParties(){
+  const cur=$("#rptParty").value;
+  const p=[...DB.parties].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  const l=[...DB.ledgers].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  let html=`<option value="">— निवडा —</option>`;
+  if(p.length) html+=`<optgroup label="पार्ट्या">`+p.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")+`</optgroup>`;
+  if(l.length) html+=`<optgroup label="खाती">`+l.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")+`</optgroup>`;
+  $("#rptParty").innerHTML=html;
+  if(cur) $("#rptParty").value=cur;
+}
+/* ---------- अहवाल ---------- */
+function renderReports(){ renderOutstanding(); renderLedgers(); renderDaybook(); renderCashbook(); renderBankbook(); renderRatecut(); }
+
+function renderOutstanding(){
+  let get=0,give=0,gold=0,silver=0; const rows=[];
+  const list=[...DB.parties].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  for(const p of list){ const b=balanceOf(p.id);
+    if(b.cash>0) get+=b.cash; else give+=-b.cash; gold+=b.gold; silver+=b.silver;
+    const nz=Math.round(Math.abs(b.cash))>0||Math.abs(b.gold)>0.001||Math.abs(b.silver)>0.001;
+    if(nz){ const parts=[];
+      if(Math.round(Math.abs(b.cash))>0) parts.push(`<span class="${b.cash>0?'get':'give'}">${rupee(b.cash)} ${b.cash>0?'येणे':'देणे'}</span>`);
+      if(Math.abs(b.gold)>0.001) parts.push(`<span class="${b.gold>0?'get':'give'}">${gram(b.gold)} सोने</span>`);
+      if(Math.abs(b.silver)>0.001) parts.push(`<span class="${b.silver>0?'get':'give'}">${gram(b.silver)} चांदी</span>`);
+      rows.push(`<div class="row" data-ledger="${p.id}"><div class="avatar">${esc(p.name[0]||"?")}</div>
+        <div class="main"><div class="name">${esc(p.name)}</div><div class="sub">${p.type}</div></div>
+        <div class="amt"><div class="t" style="max-width:130px">${parts.join(" · ")}</div></div></div>`);
+    }
+  }
+  const top=`<div class="summary" style="margin-bottom:12px">
+    <div class="bal-row">
+      <div class="bal get"><div class="k">एकूण येणे</div><div class="v num">${rupee(get)}</div></div>
+      <div class="bal give"><div class="k">एकूण देणे</div><div class="v num">${rupee(give)}</div></div>
+    </div>
+    <div class="metal-row">
+      <div class="metal"><div class="k">सोने निव्वळ</div><div class="v num ${gold>0?'get':gold<0?'give':''}">${gram(gold)} ${gold>0?'येणे':gold<0?'देणे':''}</div></div>
+      <div class="metal"><div class="k">चांदी निव्वळ</div><div class="v num ${silver>0?'get':silver<0?'give':''}">${gram(silver)} ${silver>0?'येणे':silver<0?'देणे':''}</div></div>
+    </div></div>`;
+  $("#rptOutstanding").innerHTML= top + (rows.length? rows.join("") : `<div class="empty">सर्व हिशोब चुकते</div>`);
+  document.querySelectorAll("#rptOutstanding [data-ledger]").forEach(el=>el.onclick=()=>openLedger(el.dataset.ledger));
+}
+
+function renderDaybook(){
+  const es=allEntries().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:b.createdAt-a.createdAt);
+  let html="",last=null;
+  for(const e of es){ if(e.date!==last){ html+=`<div class="day-head">${fmtDate(e.date)}</div>`; last=e.date; } html+=entryRow(e); }
+  $("#rptDaybook").innerHTML= es.length? html : `<div class="empty">नोंदी नाहीत</div>`;
+  bindEntryRows("#rptDaybook");
+}
+
+function renderCashbook(){
+  const es=DB.txns.filter(t=>t.mode==="रोख")
+    .sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:b.createdAt-a.createdAt);
+  $("#rptCashbook").innerHTML= es.length? es.map(txnRow).join("") : `<div class="empty">रोख नोंद नाही</div>`;
+  bindEntryRows("#rptCashbook");
+}
+function renderBankbook(){
+  const es=DB.txns.filter(t=>t.mode==="बँक")
+    .sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:b.createdAt-a.createdAt);
+  $("#rptBankbook").innerHTML= es.length? es.map(txnRow).join("") : `<div class="empty">बँक नोंद नाही</div>`;
+  bindEntryRows("#rptBankbook");
+}
+function renderRatecut(){
+  const items=[];
+  for(const b of DB.bills) if((+b.rcFine||0)>0) items.push({date:b.date,createdAt:b.createdAt,html:(()=>{
+    const p=partyById(b.partyId), eff=billEffect(b), cut=Math.min(+b.rcFine||0,eff.total);
+    return `<div class="row" data-bill="${b.id}"><div class="avatar bill">RC</div>
+      <div class="main"><div class="name">${esc(p?p.name:"—")}</div>
+      <div class="sub">बिल · ${fmtDate(b.date)} · ${b.metal} · ${gram(cut)} × ${rupee(b.rcRate||0)}</div></div>
+      <div class="amt"><div class="v num">${rupee(eff.cashVal)}</div><div class="t">रेटकट</div></div></div>`;
+  })(),bill:b.id});
+  for(const t of DB.txns) if(t.mode==="रेटकट") items.push({date:t.date,createdAt:t.createdAt,html:txnRow(t),txn:t.id});
+  items.sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:b.createdAt-a.createdAt);
+  $("#rptRatecut").innerHTML= items.length? items.map(x=>x.html).join("") : `<div class="empty">रेटकट नोंद नाही</div>`;
+  bindEntryRows("#rptRatecut");
+}
+
+/* ---------- स्टॉक ---------- */
+let stockFilter="सर्व";
+function renderStock(){
+  let items=[...DB.items].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  if(stockFilter!=="सर्व") items=items.filter(i=>i.metal===stockFilter);
+  // summary
+  let g={qty:0,wt:0}, s={qty:0,wt:0};
+  for(const it of DB.items){ const st=stockOf(it.id);
+    if(it.metal==="सोने"){ g.qty+=st.qty; g.wt+=st.weight; } else { s.qty+=st.qty; s.wt+=st.weight; } }
+  $("#stockSummary").innerHTML=`
+    <div class="lead">एकूण स्टॉक</div>
+    <div class="metal-row" style="margin-top:8px">
+      <div class="metal"><div class="k">सोने</div><div class="v num">${gram(g.wt)}</div><div class="k">${g.qty} नग</div></div>
+      <div class="metal"><div class="k">चांदी</div><div class="v num">${gram(s.wt)}</div><div class="k">${s.qty} नग</div></div>
+    </div>`;
+  $("#itemList").innerHTML= items.length? items.map(it=>{
+    const st=stockOf(it.id);
+    const low = st.weight<=0 && st.qty<=0;
+    return `<div class="row" data-item="${it.id}">
+      <div class="avatar${it.metal==="चांदी"?"":""}">${esc((it.name||"?")[0])}</div>
+      <div class="main"><div class="name">${esc(it.name)}</div>
+      <div class="sub">${it.metal}${it.purity?" · "+esc(it.purity):""}${it.category?" · "+esc(it.category):""}</div></div>
+      <div class="amt"><div class="v num ${low?'give':''}">${gram(st.weight)}</div><div class="t">${it.ttype==="नग"?st.qty+" नग":"सुटा"}</div></div></div>`;
+  }).join("") : emptyBox(DB.items.length?"या धातूचे आयटम नाहीत":"अजून आयटम नाही","वर ‘नवीन आयटम’ ने सुरुवात करा");
+  document.querySelectorAll("#itemList [data-item]").forEach(el=>el.onclick=()=>openItemDetail(el.dataset.item));
+}
+document.querySelectorAll("#sFilter button").forEach(b=>b.onclick=()=>{
+  stockFilter=b.dataset.f;
+  document.querySelectorAll("#sFilter button").forEach(x=>x.classList.toggle("on",x===b));
+  renderStock();
+});
+
+/* आयटम CRUD */
+let curIMetal="सोने", curIType="नग", editItemId=null;
+function openItem(){ editItemId=null; $("#itemTitle").textContent="नवीन आयटम";
+  $("#iName").value="";$("#iCat").value="";$("#iPurity").value="";
+  $("#iOpenQty").value="";$("#iOpenWt").value="";
+  curIMetal="सोने";curIType="नग"; setSeg($("#iMetal"),curIMetal); setSeg($("#iType"),curIType);
+  $("#iOpenQty").parentElement.parentElement.style.display="";
+  openSheet("#itemSheet");
+}
+$("#iMetal").querySelectorAll("button").forEach(b=>b.onclick=()=>{curIMetal=b.dataset.v;setSeg($("#iMetal"),curIMetal);});
+$("#iType").querySelectorAll("button").forEach(b=>b.onclick=()=>{curIType=b.dataset.v;setSeg($("#iType"),curIType);});
+$("#btnNewItem").onclick=openItem;
+$("#btnCloseItem").onclick=()=>closeSheet("#itemSheet");
+$("#btnSaveItem").onclick=async()=>{
+  const name=$("#iName").value.trim(); if(!name){alert("नाव टाका");return;}
+  const it={ id:uid(), createdAt:Date.now(), name, category:$("#iCat").value.trim(),
+    metal:curIMetal, purity:$("#iPurity").value.trim(), ttype:curIType };
+  DB.items.push(it);
+  const oq=+$("#iOpenQty").value||0, ow=+$("#iOpenWt").value||0;
+  if(oq||ow) DB.stockMoves.push({id:uid(),createdAt:Date.now(),itemId:it.id,dir:"आवक",qty:oq,weight:ow,reason:"ओपनिंग",date:todayISO(),note:""});
+  await DB.persist(); closeSheet("#itemSheet"); renderStock(); fillItemSelect();
+};
+
+/* आवक/जावक */
+let curMDir="आवक";
+function fillItemSelect(){
+  $("#mItem").innerHTML= DB.items.length
+    ? [...DB.items].sort((a,b)=>a.name.localeCompare(b.name,"mr")).map(i=>`<option value="${i.id}">${esc(i.name)} (${i.metal})</option>`).join("")
+    : `<option value="">— आधी आयटम जोडा —</option>`;
+}
+function openMove(preItem){ curMDir="आवक"; setSeg($("#mDir"),curMDir);
+  fillItemSelect(); if(preItem) $("#mItem").value=preItem;
+  $("#mQty").value="";$("#mWt").value="";$("#mReason").value="खरेदी";$("#mDate").value=todayISO();$("#mNote").value="";
+  openSheet("#moveSheet");
+}
+$("#mDir").querySelectorAll("button").forEach(b=>b.onclick=()=>{curMDir=b.dataset.v;setSeg($("#mDir"),curMDir);});
+$("#btnNewMove").onclick=()=>{ if(!DB.items.length){openItem();return;} openMove(); };
+$("#btnCloseMove").onclick=()=>closeSheet("#moveSheet");
+$("#btnSaveMove").onclick=async()=>{
+  const itemId=$("#mItem").value; if(!itemId){alert("आयटम निवडा");return;}
+  const qty=+$("#mQty").value||0, wt=+$("#mWt").value||0;
+  if(!qty&&!wt){alert("नग किंवा वजन टाका");return;}
+  DB.stockMoves.push({id:uid(),createdAt:Date.now(),itemId,dir:curMDir,qty,weight:wt,
+    reason:$("#mReason").value,date:$("#mDate").value||todayISO(),note:$("#mNote").value.trim()});
+  await DB.persist(); closeSheet("#moveSheet"); renderStock();
+  if($("#itemDetail").classList.contains("open")) openItemDetail(itemId);
+};
+
+/* आयटम detail + statement */
+let detailItemId=null;
+function openItemDetail(iid){
+  detailItemId=iid; const it=itemById(iid); if(!it)return;
+  const st=stockOf(iid);
+  const moves=DB.stockMoves.filter(m=>m.itemId===iid).sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:a.createdAt-b.createdAt);
+  let run={qty:0,wt:0}; const rows=[];
+  for(const m of moves){ const sg=m.dir==="जावक"?-1:1; run.qty+=sg*(+m.qty||0); run.wt+=sg*(+m.weight||0);
+    rows.push(`<div class="row"><div class="avatar ${m.dir==="जावक"?"":""}" style="background:${m.dir==="जावक"?"#F3E5E5":"#E5F0EA"};color:${m.dir==="जावक"?"var(--debit)":"var(--credit)"};font-size:12px">${m.dir==="जावक"?"−":"+"}</div>
+      <div class="main"><div class="name">${m.reason}</div><div class="sub">${fmtDate(m.date)}${m.note?" · "+esc(m.note):""}</div></div>
+      <div class="amt"><div class="v ${m.dir==="जावक"?"give":"get"}">${gram(m.weight)}</div><div class="t">${m.qty?m.qty+" नग · ":""}शिल्लक ${gram(run.wt)}</div></div></div>`);
+  }
+  $("#itemDetailBody").innerHTML=`
+    <h3>${esc(it.name)}</h3>
+    <div class="stmt-head" style="box-shadow:none">
+      <div class="ph">${it.metal}${it.purity?" · "+esc(it.purity):""}${it.category?" · "+esc(it.category):""} · ${it.ttype==="नग"?"नग-वार":"सुटा"}</div>
+      <div class="stmt-bal">
+        <div class="bal"><div class="k">सध्याचे वजन</div><div class="v num">${gram(st.weight)}</div></div>
+        ${it.ttype==="नग"?`<div class="bal"><div class="k">सध्याचे नग</div><div class="v num">${st.qty}</div></div>`:""}
+      </div>
+      <div class="actions"><button id="itemAddMove">↑↓ आवक / जावक</button></div>
+    </div>
+    <div class="sec-title">हालचाल (${moves.length})</div>
+    ${rows.length?rows.reverse().join(""):`<div class="empty">हालचाल नाही</div>`}`;
+  $("#itemAddMove").onclick=()=>{ closeSheet("#itemDetail"); openMove(iid); };
+  openSheet("#itemDetail");
+}
+$("#btnCloseItemDetail").onclick=()=>closeSheet("#itemDetail");
+$("#btnDelItem").onclick=async()=>{ if(!detailItemId)return;
+  if(!confirm("हा आयटम व त्याची सर्व स्टॉक हालचाल हटवायची?"))return;
+  DB.data.items=DB.items.filter(i=>i.id!==detailItemId);
+  DB.data.stockMoves=DB.stockMoves.filter(m=>m.itemId!==detailItemId);
+  await DB.persist(); closeSheet("#itemDetail"); renderStock(); };
+
+/* voucher numbers (global sequence per type) */
+function voucherCode(e){
+  if(e.type==="bill") return e.rec.billType==="खरेदी"?"PUR":"SAL";
+  const t=e.rec;
+  if(t.mode==="रेटकट") return "RC";
+  return t.kind==="जमा"?"REC":"PAY";
+}
+function voucherMap(){
+  const seq={}, m={};
+  const ents=allEntries().sort((a,b)=>a.createdAt-b.createdAt);
+  for(const e of ents){ const c=voucherCode(e); seq[c]=(seq[c]||0)+1; m[e.rec.id]=c+"-"+String(seq[c]).padStart(5,"0"); }
+  return m;
+}
+const n3 = v => (v&&Math.abs(v)>0.0001)? (+v).toFixed(3) : "";
+const amtI = v => (v&&Math.abs(v)>=1)? Math.round(v).toLocaleString("en-IN") : "";
+
+// build one statement row {date,vno,label,note,out,in}
+function stmtRow(e,vno){
+  const r={date:e.date,vno,label:"",note:"",out:{},in:{}};
+  if(e.type==="bill"){
+    const b=e.rec;
+    const net=(b.items||[]).reduce((x,i)=>x+Math.max((+i.gross||0)-(+i.less||0),0),0);
+    const fine=billFine(b); const touch= net? fine/net*100 : 0;
+    r.label=(b.items&&b.items[0]&&b.items[0].name)?b.items[0].name:(b.billType==="खरेदी"?"खरेदी माल":"विक्री माल");
+    r.note=b.note||"";
+    const mSide=b.billType==="खरेदी"?r.in:r.out, cSide=b.billType==="खरेदी"?r.out:r.in;
+    mSide.net=net; mSide.touch=touch; if(b.metal==="सोने") mSide.g=fine; else mSide.s=fine;
+    if(+b.paid>0) cSide.amt=+b.paid;
+    return r;
+  }
+  const t=e.rec; r.note=t.note||"";
+  if(t.mode==="रेटकट"){
+    const fine=+t.fine||0, amt=fine*(+t.rate||0);
+    r.label="रेटकट · "+t.metal;
+    const mSide=t.side==="येणे"?r.in:r.out, cSide=t.side==="येणे"?r.out:r.in;
+    if(t.metal==="सोने") mSide.g=fine; else mSide.s=fine; mSide.net=fine; mSide.touch=100; cSide.amt=amt;
+    return r;
+  }
+  const side=t.kind==="जमा"?r.in:r.out;
+  if(t.mode==="रोख"||t.mode==="बँक"){ r.label=t.mode==="बँक"?("बँक"+(t.bank?" · "+t.bank:"")):"रोख"; side.amt=+t.amount||0; }
+  else { r.label=t.mode; side.net=+t.weight||0; side.touch=+t.touch||0; const f=fineOfTxn(t); if(t.mode==="सोने")side.g=f; else side.s=f; }
+  return r;
+}
+
+function buildStatementTable(pid){
+  const vmap=voucherMap();
+  const es=allEntries(pid).sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:a.createdAt-b.createdAt);
+  const tot={out:{net:0,g:0,s:0,amt:0},in:{net:0,g:0,s:0,amt:0}};
+  const body=es.map(e=>{
+    const r=stmtRow(e,vmap[e.rec.id]||"");
+    for(const sd of ["out","in"]){ tot[sd].net+=+r[sd].net||0; tot[sd].g+=+r[sd].g||0; tot[sd].s+=+r[sd].s||0; tot[sd].amt+=+r[sd].amt||0; }
+    const cell=(o)=>`<td class="r side">${n3(o.net)}</td><td class="r">${o.touch?(+o.touch).toFixed(3):""}</td><td class="r">${n3(o.g)}</td><td class="r">${n3(o.s)}</td><td class="r">${amtI(o.amt)}</td>`;
+    return `<tr>
+      <td>${fmtDate(r.date)}</td>
+      <td class="part"><span class="vno">${r.vno}</span>, ${esc(r.label)}${r.note?`<br><span class="note">Note: ${esc(r.note)}</span>`:""}</td>
+      ${cell(r.out)}${cell(r.in)}</tr>`;
+  }).join("");
+  const totRow=`<tr class="tot"><td></td><td>एकूण</td>
+    <td class="r side">${n3(tot.out.net)}</td><td></td><td class="r">${n3(tot.out.g)}</td><td class="r">${n3(tot.out.s)}</td><td class="r">${amtI(tot.out.amt)}</td>
+    <td class="r side">${n3(tot.in.net)}</td><td></td><td class="r">${n3(tot.in.g)}</td><td class="r">${n3(tot.in.s)}</td><td class="r">${amtI(tot.in.amt)}</td></tr>`;
+  const head=`<thead>
+    <tr><th rowspan="2">तारीख</th><th rowspan="2" class="part">तपशील</th>
+      <th colspan="5" class="grp side">OUT / लेणे</th><th colspan="5" class="grp side">IN / देणे</th></tr>
+    <tr>
+      <th class="r side">नेट</th><th class="r">टच</th><th class="r">सोने शुद्ध</th><th class="r">चांदी शुद्ध</th><th class="r">रक्कम</th>
+      <th class="r side">नेट</th><th class="r">टच</th><th class="r">सोने शुद्ध</th><th class="r">चांदी शुद्ध</th><th class="r">रक्कम</th></tr></thead>`;
+  return { table:`<table class="sttbl">${head}<tbody>${body||""}${es.length?totRow:""}</tbody></table>`, count:es.length };
+}
+
+function renderStatement(){
+  const pid=$("#rptParty").value;
+  if(!pid){ $("#stmt").innerHTML=""; return; }
+  const a=accountById(pid); if(!a){ $("#stmt").innerHTML=""; return; }
+  const isParty=!!partyById(pid); const b=balanceOf(pid);
+  const {table,count}=buildStatementTable(pid);
+  const balParts=[];
+  balParts.push(`रोख ${rupee(b.cash)} ${b.cash>0?"येणे":b.cash<0?"देणे":""}`);
+  if(Math.abs(b.gold)>0.001) balParts.push(`सोने ${gram(b.gold)} ${b.gold>0?"येणे":"देणे"}`);
+  if(Math.abs(b.silver)>0.001) balParts.push(`चांदी ${gram(b.silver)} ${b.silver>0?"येणे":"देणे"}`);
+  $("#stmt").innerHTML=`
+    <div class="stmt-head">
+      <div class="nm">${esc(a.name)}</div>
+      <div class="ph">${isParty?(a.type+(a.phone?" · "+esc(a.phone):"")):("खाते · "+esc(a.group))}</div>
+      <div class="actions">
+        ${isParty&&a.phone?`<a href="tel:${a.phone}">📞 कॉल</a>`:""}
+        <button id="printStmt">🖨️ प्रिंट</button>
+        <button id="shareStmt">📤 शेअर</button>
+      </div>
+    </div>
+    <div class="sttwrap">${count?table:`<div class="empty">व्यवहार नाहीत</div>`}</div>
+    <div class="stmt-close">शिल्लक — ${balParts.join(" · ")}</div>`;
+  const sh=$("#shareStmt"); if(sh) sh.onclick=()=>shareStatement(a,b,count);
+  const pr=$("#printStmt"); if(pr) pr.onclick=()=>printStatement(pid,a,b);
+}
+function printStatement(pid,a,b){
+  const {table}=buildStatementTable(pid);
+  const isParty=!!partyById(pid);
+  const balParts=[`रोख ${rupee(b.cash)} ${b.cash>0?"येणे":b.cash<0?"देणे":""}`];
+  if(Math.abs(b.gold)>0.001) balParts.push(`सोने ${gram(b.gold)} ${b.gold>0?"येणे":"देणे"}`);
+  if(Math.abs(b.silver)>0.001) balParts.push(`चांदी ${gram(b.silver)} ${b.silver>0?"येणे":"देणे"}`);
+  $("#printArea").innerHTML=`
+    <h2>Detail Ledger Statement — ${esc(a.name)}</h2>
+    <div class="sub">सूर्यवंशी अलंकार केंद्र · ${isParty?esc(a.type):("खाते · "+esc(a.group))} · दि. ${fmtDate(todayISO())}</div>
+    ${table}
+    <div style="margin-top:10px;font-weight:700">शिल्लक — ${balParts.join(" · ")}</div>`;
+  window.print();
+}
+function balCard(label,val,txt){ const cls=val>0?"get":val<0?"give":""; const tag=val>0?"येणे":val<0?"देणे":"चुकता";
+  return `<div class="bal"><div class="k">${label} — ${tag}</div><div class="v ${cls}">${txt}</div></div>`; }
+function emptyBox(a,b){ return `<div class="empty"><div class="big">${a}</div>${b}</div>`; }
+
+/* ---------- Tabs ---------- */
+const titles={home:"आजचा हिशोब",txn:"सर्व व्यवहार",stock:"स्टॉक",party:"पार्ट्या",report:"अहवाल"};
+function showTab(t){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $("#s-"+t).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+  $("#hTitle").textContent=titles[t]; window.scrollTo(0,0);
+  if(t==="report") renderReports();
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* party filter */
+document.querySelectorAll("#pFilter button").forEach(b=>b.onclick=()=>{
+  partyFilter=b.dataset.f;
+  document.querySelectorAll("#pFilter button").forEach(x=>x.classList.toggle("on",x===b));
+  renderParties();
+});
+/* accordion */
+document.querySelectorAll(".acc-head").forEach(h=>h.onclick=()=>h.parentElement.classList.toggle("open"));
+
+/* ---------- Sheets ---------- */
+const openSheet=id=>$(id).classList.add("open");
+const closeSheet=id=>$(id).classList.remove("open");
+
+/* chooser */
+$("#fab").onclick=()=>openSheet("#chooser");
+$("#chClose").onclick=()=>closeSheet("#chooser");
+$("#chBill").onclick=()=>{ closeSheet("#chooser"); if(!DB.parties.length){openParty();return;} openBill(); };
+$("#chTxn").onclick=()=>{ closeSheet("#chooser"); if(!DB.parties.length&&!DB.ledgers.length){openParty();return;} openTxn(null); };
+$("#chParty").onclick=()=>{ closeSheet("#chooser"); openParty(); };
+/* dashboard quick actions */
+$("#qaBill").onclick=()=>{ if(!DB.parties.length){openParty();return;} openBill(); };
+$("#qaTxn").onclick=()=>{ if(!DB.parties.length&&!DB.ledgers.length){openParty();return;} openTxn(null); };
+
+/* ---------- Party select fills ---------- */
+function fillSelect(sel){
+  const list=[...DB.parties].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  sel.innerHTML= list.length? list.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.type})</option>`).join("")
+    : `<option value="">— आधी पार्टी जोडा —</option>`;
+}
+function fillAccountSelect(sel){
+  const p=[...DB.parties].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  const l=[...DB.ledgers].sort((a,b)=>a.name.localeCompare(b.name,"mr"));
+  let html="";
+  if(p.length) html+=`<optgroup label="पार्ट्या">`+p.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.type})</option>`).join("")+`</optgroup>`;
+  if(l.length) html+=`<optgroup label="खाती (Ledgers)">`+l.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.group})</option>`).join("")+`</optgroup>`;
+  sel.innerHTML= html || `<option value="">— आधी पार्टी/खाते जोडा —</option>`;
+}
+function setSeg(seg,v){ seg.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)); }
+
+/* ---------- साधा व्यवहार ---------- */
+let editTxnId=null, curKind="नावे", curMode="रोख", curSide="येणे", curRcMetal="सोने";
+function updateModeFields(){
+  const isCash=curMode==="रोख", isBank=curMode==="बँक", isMetal=(curMode==="सोने"||curMode==="चांदी"), isRc=curMode==="रेटकट";
+  $("#cashFields").classList.toggle("hidden",!(isCash||isBank));
+  $("#bankField").classList.toggle("hidden",!isBank);
+  $("#metalFields").classList.toggle("hidden",!isMetal);
+  $("#rcFields").classList.toggle("hidden",!isRc);
+  $("#kindWrap").classList.toggle("hidden",isRc);   // ratecut uses side, not जमा/नावे
+  updateFineHint(); updateRcHint();
+}
+function updateFineHint(){ const w=+$("#fWeight").value||0,tc=+$("#fTouch").value||0;
+  $("#fineHint").textContent=gram(tc>0?w*tc/100:w); }
+function updateRcHint(){ const f=+$("#fRcFine").value||0,r=+$("#fRcRate").value||0;
+  $("#rcHint").textContent=rupee(f*r); }
+function openTxn(id){
+  editTxnId=id||null; fillAccountSelect($("#fParty"));
+  if(id){ const t=DB.txns.find(x=>x.id===id);
+    $("#txnSheetTitle").textContent="नोंद तपशील";
+    $("#fParty").value=t.partyId; curKind=t.kind||"नावे"; curMode=t.mode;
+    $("#fAmount").value=t.amount||""; $("#fBank").value=t.bank||"";
+    $("#fWeight").value=t.weight||""; $("#fTouch").value=t.touch||"";
+    curSide=t.side||"येणे"; curRcMetal=t.metal||"सोने";
+    $("#fRcFine").value=t.fine||""; $("#fRcRate").value=t.rate||"";
+    $("#fDate").value=t.date; $("#fNote").value=t.note||""; $("#btnDelTxn").style.display="block";
+  } else { $("#txnSheetTitle").textContent="पावती / पेमेंट"; curKind="नावे"; curMode="रोख"; curSide="येणे"; curRcMetal="सोने";
+    $("#fAmount").value="";$("#fBank").value="";$("#fWeight").value="";$("#fTouch").value="";
+    $("#fRcFine").value="";$("#fRcRate").value="";$("#fNote").value="";
+    $("#fDate").value=todayISO(); $("#btnDelTxn").style.display="none"; }
+  setSeg($("#fKind"),curKind); setSeg($("#fMode"),curMode);
+  setSeg($("#fSide"),curSide); setSeg($("#fRcMetal"),curRcMetal);
+  updateModeFields(); openSheet("#txnSheet");
+}
+$("#btnCloseTxn").onclick=()=>closeSheet("#txnSheet");
+$("#fKind").querySelectorAll("button").forEach(b=>b.onclick=()=>{curKind=b.dataset.v;setSeg($("#fKind"),curKind);});
+$("#fMode").querySelectorAll("button").forEach(b=>b.onclick=()=>{curMode=b.dataset.v;setSeg($("#fMode"),curMode);updateModeFields();});
+$("#fSide").querySelectorAll("button").forEach(b=>b.onclick=()=>{curSide=b.dataset.v;setSeg($("#fSide"),curSide);});
+$("#fRcMetal").querySelectorAll("button").forEach(b=>b.onclick=()=>{curRcMetal=b.dataset.v;setSeg($("#fRcMetal"),curRcMetal);});
+["fWeight","fTouch"].forEach(id=>$("#"+id).addEventListener("input",updateFineHint));
+["fRcFine","fRcRate"].forEach(id=>$("#"+id).addEventListener("input",updateRcHint));
+$("#btnSaveTxn").onclick=async()=>{
+  const partyId=$("#fParty").value; if(!partyId){alert("पार्टी निवडा");return;}
+  let rec;
+  if(curMode==="रेटकट"){
+    const fine=+$("#fRcFine").value||0, rate=+$("#fRcRate").value||0;
+    if(!fine){alert("शुद्ध वजन टाका");return;}
+    if(!rate){alert("दर टाका");return;}
+    rec={ partyId, mode:"रेटकट", side:curSide, metal:curRcMetal, fine, rate,
+      date:$("#fDate").value||todayISO(), note:$("#fNote").value.trim() };
+  } else {
+    const isCashy=(curMode==="रोख"||curMode==="बँक");
+    rec={ partyId, kind:curKind, mode:curMode,
+      amount:isCashy?(+$("#fAmount").value||0):null,
+      bank:curMode==="बँक"?$("#fBank").value.trim():null,
+      weight:!isCashy?(+$("#fWeight").value||0):null,
+      touch:!isCashy?(+$("#fTouch").value||0):null,
+      date:$("#fDate").value||todayISO(), note:$("#fNote").value.trim() };
+    if(isCashy&&!rec.amount){alert("रक्कम टाका");return;}
+    if(!isCashy&&!rec.weight){alert("वजन टाका");return;}
+  }
+  if(editTxnId){ const t=DB.txns.find(x=>x.id===editTxnId);
+    Object.keys(t).forEach(k=>{ if(!["id","createdAt"].includes(k)) delete t[k]; });
+    Object.assign(t,rec);
+  } else DB.txns.push({id:uid(),createdAt:Date.now(),...rec});
+  await DB.persist(); closeSheet("#txnSheet"); renderAll();
+};
+$("#btnDelTxn").onclick=async()=>{ if(!editTxnId||!confirm("ही नोंद हटवायची?"))return;
+  DB.data.txns=DB.txns.filter(t=>t.id!==editTxnId); await DB.persist(); closeSheet("#txnSheet"); renderAll(); };
+
+/* ---------- बिल ---------- */
+let curBType="खरेदी", curBMetal="सोने";
+function itemRowHTML(it){ it=it||{}; return `<div class="bitem">
+  <div class="itop"><input type="text" class="b-name" placeholder="आयटम नाव (ऐच्छिक)" value="${esc(it.name||"")}">
+  <button class="rm" title="काढा">×</button></div>
+  <div class="three">
+    <div><label>ग्रॉस ग्रॅ</label><input type="number" inputmode="decimal" class="b-gross" placeholder="0" value="${it.gross??""}"></div>
+    <div><label>घट ग्रॅ</label><input type="number" inputmode="decimal" class="b-less" placeholder="0" value="${it.less??""}"></div>
+    <div><label>नेट ग्रॅ</label><input type="text" class="b-net" readonly value=""></div>
+  </div>
+  <div class="two">
+    <div><label>टच %</label><input type="number" inputmode="decimal" class="b-tunch" placeholder="0" value="${it.tunch??""}"></div>
+    <div><label>वेस्टेज %</label><input type="number" inputmode="decimal" class="b-waste" placeholder="0" value="${it.waste??""}"></div>
+  </div>
+  <div class="fine-line"><span>शुद्ध</span><span class="b-fine num">0 ग्रॅ</span></div>
+</div>`; }
+
+function addItem(it){ const wrap=document.createElement("div"); wrap.innerHTML=itemRowHTML(it);
+  const el=wrap.firstElementChild; $("#billItems").appendChild(el);
+  el.querySelector(".rm").onclick=()=>{ if($("#billItems").children.length>1){ el.remove(); recomputeBill(); } };
+  el.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",recomputeBill));
+  recomputeBill();
+}
+function recomputeBill(){
+  let total=0;
+  $("#billItems").querySelectorAll(".bitem").forEach(el=>{
+    const g=+el.querySelector(".b-gross").value||0, l=+el.querySelector(".b-less").value||0;
+    const net=Math.max(g-l,0), tc=+el.querySelector(".b-tunch").value||0, w=+el.querySelector(".b-waste").value||0;
+    const fine=net*(tc+w)/100;
+    el.querySelector(".b-net").value=net?(Math.round(net*1000)/1000):"";
+    el.querySelector(".b-fine").textContent=gram(fine);
+    total+=fine;
+  });
+  $("#billTotFine").textContent=gram(total);
+  updateBillResult(total);
+}
+function currentBillObj(){
+  const items=[];
+  $("#billItems").querySelectorAll(".bitem").forEach(el=>{
+    const g=+el.querySelector(".b-gross").value||0, l=+el.querySelector(".b-less").value||0;
+    const net=Math.max(g-l,0), tc=+el.querySelector(".b-tunch").value||0, w=+el.querySelector(".b-waste").value||0;
+    if(g>0) items.push({name:el.querySelector(".b-name").value.trim(),gross:g,less:l,tunch:tc,waste:w,fine:net*(tc+w)/100});
+  });
+  return { billType:curBType, metal:curBMetal, partyId:$("#bParty").value, date:$("#bDate").value||todayISO(),
+    items, rcFine:+$("#bRcFine").value||0, rcRate:+$("#bRcRate").value||0,
+    making:+$("#bMaking").value||0, paid:+$("#bPaid").value||0, note:$("#bNote").value.trim() };
+}
+function updateBillResult(total){
+  const bl=currentBillObj(); const eff=billEffect(bl);
+  const buy=curBType==="खरेदी";
+  const mSide=eff.metal>0?"येणे":eff.metal<0?"देणे":"—";
+  const cSide=eff.cash>0?"येणे":eff.cash<0?"देणे":"—";
+  $("#billResult").innerHTML=`
+    <div class="rl"><span>मेटल बाकी (${bl.metal})</span><b class="${eff.metal>0?'get':eff.metal<0?'give':''}">${gram(eff.remainFine)} ${mSide}</b></div>
+    <div class="rl"><span>रेटकट रक्कम</span><b class="num">${rupee(eff.cashVal)}</b></div>
+    <div class="rl"><span>रोख बाकी</span><b class="${eff.cash>0?'get':eff.cash<0?'give':''} num">${rupee(eff.netCash)} ${cSide}</b></div>`;
+  $("#bPaidLbl").textContent = buy? "नगदी दिले (₹)" : "नगदी घेतले (₹)";
+}
+function openBill(id){
+  editBillId=id||null; fillSelect($("#bParty")); $("#billItems").innerHTML="";
+  if(id){ const b=DB.bills.find(x=>x.id===id); /* view handled separately */ }
+  curBType="खरेदी"; curBMetal="सोने"; setSeg($("#bType"),curBType); setSeg($("#bMetal"),curBMetal);
+  $("#bParty").selectedIndex=0; $("#bDate").value=todayISO();
+  $("#bRcFine").value="";$("#bRcRate").value="";$("#bMaking").value="";$("#bPaid").value="";$("#bNote").value="";
+  addItem(); openSheet("#billSheet");
+}
+let editBillId=null;
+$("#btnAddItem").onclick=()=>addItem();
+$("#btnCloseBill").onclick=()=>closeSheet("#billSheet");
+$("#bType").querySelectorAll("button").forEach(b=>b.onclick=()=>{curBType=b.dataset.v;setSeg($("#bType"),curBType);recomputeBill();});
+$("#bMetal").querySelectorAll("button").forEach(b=>b.onclick=()=>{curBMetal=b.dataset.v;setSeg($("#bMetal"),curBMetal);recomputeBill();});
+["bRcFine","bRcRate","bMaking","bPaid"].forEach(id=>$("#"+id).addEventListener("input",recomputeBill));
+$("#bParty").addEventListener("change",recomputeBill);
+$("#rcAll").onclick=()=>{ let total=0; $("#billItems").querySelectorAll(".b-fine").forEach(()=>{});
+  total=billFine(currentBillObj()); $("#bRcFine").value=Math.round(total*1000)/1000; recomputeBill(); };
+$("#rcNone").onclick=()=>{ $("#bRcFine").value=""; recomputeBill(); };
+$("#btnSaveBill").onclick=async()=>{
+  const bl=currentBillObj();
+  if(!bl.partyId){alert("पार्टी निवडा");return;}
+  if(!bl.items.length){alert("किमान एक आयटम भरा (ग्रॉस वजन)");return;}
+  DB.bills.push({id:uid(),createdAt:Date.now(),...bl});
+  await DB.persist(); closeSheet("#billSheet"); renderAll();
+};
+
+/* ---------- बिल detail ---------- */
+let detailBillId=null;
+function openDetail(id){
+  detailBillId=id; const b=DB.bills.find(x=>x.id===id); if(!b)return;
+  const p=partyById(b.partyId), eff=billEffect(b), buy=b.billType==="खरेदी";
+  const rows=(b.items||[]).map(it=>`<div class="dr">
+    <span>${esc(it.name||"—")}</span>
+    <span class="r num">${(+it.gross||0)}${it.less?(" −"+it.less):""}</span>
+    <span class="r num">${it.tunch||0}%</span>
+    <span class="r num">${it.waste?("+"+it.waste+"%"):"—"}</span>
+    <span class="r num">${gram(it.fine)}</span></div>`).join("");
+  $("#detailBody").innerHTML=`
+    <h3>${b.billType} बिल — ${b.metal}</h3>
+    <div class="stmt-head" style="box-shadow:none">
+      <div class="nm">${esc(p?p.name:"—")}</div>
+      <div class="ph">${fmtDate(b.date)}${b.note?" · "+esc(b.note):""}</div>
+    </div>
+    <div class="detail-items">
+      <div class="dh"><span>आयटम</span><span class="r">ग्रॉस</span><span class="r">टच</span><span class="r">वे.</span><span class="r">शुद्ध</span></div>
+      ${rows}
+      <div class="dr" style="font-weight:700;background:var(--paper)"><span>एकूण</span><span></span><span></span><span></span><span class="r num">${gram(eff.total)}</span></div>
+    </div>
+    <div class="result" style="margin-top:12px">
+      <div class="rl"><span>रेटकट</span><b class="num">${gram(Math.min(b.rcFine||0,eff.total))} × ${rupee(b.rcRate||0)} = ${rupee(eff.cashVal)}</b></div>
+      ${b.making?`<div class="rl"><span>मजुरी</span><b class="num">${rupee(b.making)}</b></div>`:""}
+      <div class="rl"><span>${buy?"नगदी दिले":"नगदी घेतले"}</span><b class="num">${rupee(b.paid||0)}</b></div>
+      <div class="rl" style="border-top:1px solid var(--line);padding-top:8px;margin-top:4px">
+        <span>मेटल बाकी</span><b class="${eff.metal>0?'get':eff.metal<0?'give':''}">${gram(eff.remainFine)} ${eff.metal>0?'येणे':eff.metal<0?'देणे':'—'}</b></div>
+      <div class="rl"><span>रोख बाकी</span><b class="${eff.cash>0?'get':eff.cash<0?'give':''} num">${rupee(eff.netCash)} ${eff.cash>0?'येणे':eff.cash<0?'देणे':'—'}</b></div>
+    </div>`;
+  openSheet("#detailSheet");
+}
+$("#btnCloseDetail").onclick=()=>closeSheet("#detailSheet");
+$("#btnDelBill").onclick=async()=>{ if(!detailBillId||!confirm("हे बिल हटवायचे?"))return;
+  DB.data.bills=DB.bills.filter(b=>b.id!==detailBillId); await DB.persist(); closeSheet("#detailSheet"); renderAll(); };
+
+/* ---------- पार्टी ---------- */
+function openParty(){ $("#pName").value="";$("#pPhone").value="";$("#pType").value="ग्राहक"; openSheet("#partySheet"); }
+$("#btnCloseParty").onclick=()=>closeSheet("#partySheet");
+$("#btnSaveParty").onclick=async()=>{
+  const name=$("#pName").value.trim(); if(!name){alert("नाव टाका");return;}
+  const p={id:uid(),name,phone:$("#pPhone").value.trim(),type:$("#pType").value};
+  DB.parties.push(p); await DB.persist();
+  fillAccountSelect($("#fParty")); fillSelect($("#bParty"));
+  if($("#txnSheet").classList.contains("open")) $("#fParty").value=p.id;
+  if($("#billSheet").classList.contains("open")) { $("#bParty").value=p.id; recomputeBill(); }
+  closeSheet("#partySheet"); renderAll();
+};
+
+/* ---------- backup ---------- */
+$("#btnExport").onclick=()=>{ const blob=new Blob([JSON.stringify(DB.data,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="goldkhata-backup-"+todayISO()+".json"; a.click(); };
+$("#btnImport").onclick=()=>$("#fileImport").click();
+$("#fileImport").onchange=e=>{ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=async()=>{ try{ const d=JSON.parse(r.result); if(!d.parties)throw 0;
+    if(!confirm("सध्याचा डेटा बदलून बॅकअप लोड करायचा?"))return;
+    d.txns=d.txns||[]; d.bills=d.bills||[]; d.items=d.items||[]; d.stockMoves=d.stockMoves||[]; d.ledgers=d.ledgers||[]; DB.data=d; await DB.persist(); renderAll(); alert("बॅकअप लोड झाला"); }
+    catch(err){ alert("फाइल वाचता आली नाही"); } };
+  r.readAsText(f); e.target.value=""; };
+
+function shareStatement(p,b,n){
+  let s=`${p.name} — खातेवही\n`;
+  if(Math.round(b.cash)!==0) s+=`रोख: ${rupee(b.cash)} ${b.cash>0?"येणे":"देणे"}\n`;
+  if(Math.abs(b.gold)>0.001) s+=`सोने: ${gram(b.gold)} ${b.gold>0?"येणे":"देणे"}\n`;
+  if(Math.abs(b.silver)>0.001) s+=`चांदी: ${gram(b.silver)} ${b.silver>0?"येणे":"देणे"}\n`;
+  s+=`\nएकूण ${n} व्यवहार`;
+  if(navigator.share) navigator.share({text:s}).catch(()=>{});
+  else { navigator.clipboard&&navigator.clipboard.writeText(s); alert("तपशील कॉपी झाला"); }
+}
+
+["chooser","txnSheet","billSheet","detailSheet","partySheet","itemSheet","moveSheet","itemDetail","ledgerSheet"].forEach(id=>{
+  $("#"+id).addEventListener("click",e=>{ if(e.target.id===id) closeSheet("#"+id); });
+});
+
+(async()=>{ await DB.init(); $("#fDate").value=todayISO(); renderAll(); })();
+</script>
+<div id="printArea" class="printonly"></div>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){});});}</script>
+</body>
+</html>
